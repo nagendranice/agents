@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: news-mailer
+    env: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: EMAIL_SENDER
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
