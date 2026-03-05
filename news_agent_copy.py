@@ -1,4 +1,5 @@
 import os
+import sys
 from dotenv import load_dotenv
 from typing import Any
 from langchain_groq import ChatGroq
@@ -15,8 +16,26 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 import json
 import re
+import logging
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Load environment variables (Railway injects them directly)
 load_dotenv()
+
+# Validate required environment variables
+required_vars = ["EMAIL_SENDER", "EMAIL_PASSWORD", "GROQ_API_KEY"]
+missing_vars = [var for var in required_vars if not os.getenv(var)]
+if missing_vars:
+    logger.error(f"Missing required environment variables: {missing_vars}")
+    logger.error("Please set them in your Railway dashboard: Settings → Variables")
+else:
+    logger.info("All required environment variables are set")
 
 app = FastAPI(title="News Mailer API", version="1.0.0")
 
@@ -318,6 +337,16 @@ def send_email(receiver_email: str, name: str, hours_back: int, markdown_digest:
     server.quit()
 
 
+@app.on_event("startup")
+async def startup_event():
+    logger.info("🚀 News Mailer API starting up...")
+    logger.info(f"Static files directory: {os.path.abspath('static')}")
+    logger.info(f"Environment check: EMAIL_SENDER={'✓' if os.getenv('EMAIL_SENDER') else '✗'}")
+    logger.info(f"Environment check: EMAIL_PASSWORD={'✓' if os.getenv('EMAIL_PASSWORD') else '✗'}")
+    logger.info(f"Environment check: GROQ_API_KEY={'✓' if os.getenv('GROQ_API_KEY') else '✗'}")
+    logger.info("✅ Application startup complete")
+
+
 @app.get("/")
 async def root():
     """Serve the main HTML form."""
@@ -326,7 +355,8 @@ async def root():
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok"}
+    logger.info("Health check requested")
+    return {"status": "ok", "timestamp": datetime.now().isoformat()}
 
 
 @app.post("/send-news")
@@ -363,4 +393,15 @@ def send_news(req: SendNewsRequest) -> dict[str, Any]:
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
+    port = int(os.getenv("PORT", 8000))
+    logger.info(f"🚀 Starting News Mailer API on port {port}")
+    logger.info(f"📡 Health check endpoint: http://0.0.0.0:{port}/health")
+    logger.info(f"🌐 Web interface: http://0.0.0.0:{port}/")
+    
+    uvicorn.run(
+        app, 
+        host="0.0.0.0", 
+        port=port, 
+        reload=False,
+        log_level="info"
+    )

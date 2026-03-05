@@ -18,9 +18,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY news_agent_copy.py news_agent.py
 COPY static/ static/
-COPY .env .env
 
-# Expose port
+# Expose port (Railway will override with PORT env var)
 EXPOSE 8000
 
 # Set environment variable for production

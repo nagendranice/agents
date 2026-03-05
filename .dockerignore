@@ -9,6 +9,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+.env
 .env.local
 .git/
 .github/
@@ -16,3 +17,11 @@ build/
 .idea/
 *.log
 .DS_Store
+news_agent.py
+README.md
+DEPLOYMENT.md
+DEPLOYMENT_CHECKLIST.md
+start.sh
+start.bat
+tasks.bat
+
